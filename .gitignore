@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+
+# Database
+*.sqlite
+
+# IDE
+.idea/
+
+# MyPy cache
+.mypy_cache/
