@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Request
 
-from schemas import User, UserResponse, UserBase, TokenResponse
+from schemas import User, UserResponse, UserBase, TokenResponse, RefreshTokenRequest
 from crud import get_user_by_name, create_user
-from services import create_jwt_token, pwd_context
+from services import generate_tokens, pwd_context, verify_refresh_token
 from extensions import limiter
 
 
@@ -50,5 +50,11 @@ async def login(user: User, request: Request) -> TokenResponse:
             status_code=401,
             detail="Authorization failed",
         )
-    token = create_jwt_token({"sub": user.username})
-    return TokenResponse(access_token=token)
+
+    return generate_tokens(user.username)
+
+
+@router.post("/refresh", status_code=200, response_model=TokenResponse)
+@limiter.limit("5/minute")
+async def refresh_token(token: RefreshTokenRequest, request: Request):
+    return verify_refresh_token(token.refresh_token)

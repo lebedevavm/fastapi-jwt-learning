@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Literal
 
 
 class UserBase(BaseModel):
@@ -19,8 +20,13 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
-    token_type: str = "bearer"
+    refresh_token: str
+    token_type: str = Literal["bearer"]
 
 
 class MessageResponse(BaseModel):
     message: str
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
