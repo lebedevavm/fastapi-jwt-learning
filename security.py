@@ -80,9 +80,7 @@ def generate_tokens(user: str) -> TokenResponse:
         {"sub": user}, token_type="access", expires_delta=timedelta(minutes=15)
     )
     refresh_token = create_jwt_token(
-        {"sub": user},
-        token_type="refresh",
-        expires_delta=timedelta(days=7)
+        {"sub": user}, token_type="refresh", expires_delta=timedelta(days=7)
     )
     refresh_tokens[user] = refresh_token
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)

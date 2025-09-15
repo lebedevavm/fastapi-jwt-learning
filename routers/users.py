@@ -1,8 +1,15 @@
 from fastapi import APIRouter, HTTPException, Request
 
-from schemas import User, UserResponse, UserBase, TokenResponse, RefreshTokenRequest
+from schemas import (
+    User,
+    UserResponse,
+    UserBase,
+    TokenResponse,
+    RefreshTokenRequest,
+    UserLogin,
+)
 from crud import get_user_by_name, create_user
-from services import generate_tokens, pwd_context, verify_refresh_token
+from security import generate_tokens, pwd_context, verify_refresh_token
 from extensions import limiter
 
 
@@ -23,17 +30,20 @@ async def new_user(user: User, request: Request) -> UserResponse:
             status_code=409,
             detail="User already exists",
         )
-    db_user = await create_user(user.username, pwd_context.hash(user.password))
+    db_user = await create_user(
+        user.username, pwd_context.hash(user.password), user.role
+    )
     if not db_user:
         raise HTTPException(status_code=500, detail="User is not created")
     return UserResponse(
-        user=UserBase(username=user.username), message="New user created"
+        user=UserBase(username=user.username, role=user.role),
+        message="New user created",
     )
 
 
 @router.post("/login", status_code=200, response_model=TokenResponse)
 @limiter.limit("5/minute")
-async def login(user: User, request: Request) -> TokenResponse:
+async def login(user: UserLogin, request: Request) -> TokenResponse:
     """
     Login with existed user.
     :param user: User object with username and password
@@ -56,5 +66,5 @@ async def login(user: User, request: Request) -> TokenResponse:
 
 @router.post("/refresh", status_code=200, response_model=TokenResponse)
 @limiter.limit("5/minute")
-async def refresh_token(token: RefreshTokenRequest, request: Request):
+def refresh_token(token: RefreshTokenRequest, request: Request):
     return verify_refresh_token(token.refresh_token)

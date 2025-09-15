@@ -3,16 +3,18 @@ from sqlalchemy import insert, select
 
 from database import database
 from models import User
+from schemas import RoleName
 
 
-async def create_user(name: str, password_hash: str) -> int:
+async def create_user(name: str, password_hash: str, role: RoleName) -> int:
     """
     Add a new user in DB.
     :param name: name for new user
     :param password_hash: hash for password for new user
+    :param role: role for new user
     :return: int: id created user
     """
-    query = insert(User).values(username=name, password_hash=password_hash)
+    query = insert(User).values(username=name, password_hash=password_hash, role=role)
     return await database.execute(query)
 
 
