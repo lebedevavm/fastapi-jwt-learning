@@ -1,11 +1,11 @@
 import jwt
 import secrets
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 
-from schemas import TokenResponse
+from schemas import TokenResponse, UserBase
 
 
 SECRET_KEY = secrets.token_hex(32)
@@ -75,12 +75,25 @@ def verify_refresh_token(token: str = Depends(oauth2_scheme)) -> TokenResponse:
     return generate_tokens(user)
 
 
-def generate_tokens(user: str) -> TokenResponse:
+def generate_tokens(user: UserBase) -> TokenResponse:
+    payload = {"sub": user.username, "role": user.role}  # username  # роль
     access_token = create_jwt_token(
-        {"sub": user}, token_type="access", expires_delta=timedelta(minutes=15)
+        payload, token_type="access", expires_delta=timedelta(minutes=15)
     )
     refresh_token = create_jwt_token(
-        {"sub": user}, token_type="refresh", expires_delta=timedelta(days=7)
+        payload, token_type="refresh", expires_delta=timedelta(days=7)
     )
-    refresh_tokens[user] = refresh_token
+    refresh_tokens[user.username] = refresh_token
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+
+def get_username_from_request(request: Request) -> str:
+    auth_header = request.headers.get("Authorization")
+    token = auth_header.split()[-1] if auth_header else None
+    if not token:
+        return "_guest"
+    try:
+        payload = verify_token(token)
+        return payload.get("sub", "_guest")
+    except jwt.PyJWTError:
+        return "_guest"

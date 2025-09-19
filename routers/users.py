@@ -60,8 +60,8 @@ async def login(user: UserLogin, request: Request) -> TokenResponse:
             status_code=401,
             detail="Authorization failed",
         )
-
-    return generate_tokens(user.username)
+    user_obj = UserBase(username=existed_user["username"], role=existed_user["role"])
+    return generate_tokens(user_obj)
 
 
 @router.post("/refresh", status_code=200, response_model=TokenResponse)
